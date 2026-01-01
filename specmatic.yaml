@@ -1,0 +1,4 @@
+version: 2
+contracts:
+  - provides:
+      - specs/spec.yaml

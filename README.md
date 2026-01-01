@@ -194,7 +194,6 @@ Orders progress through the following statuses:
 
 ```
 .
-├── asyncapi.yaml       # AsyncAPI specification
 ├── server.js           # WebSocket server implementation
 ├── test-client.js      # Test client with examples
 ├── package.json        # Node.js dependencies

@@ -1,18 +1,44 @@
 const WebSocket = require('ws');
 
-const ws = new WebSocket('ws://localhost:8080');
+// Connect to reply channels first
+const wsWipOrders = new WebSocket('ws://localhost:8080/wip-orders');
+const wsCancelledOrders = new WebSocket('ws://localhost:8080/cancelled-orders');
 
-ws.on('open', () => {
-  console.log('Connected to WebSocket server');
-  console.log('-----------------------------------\n');
+wsWipOrders.on('open', () => {
+  console.log('Subscribed to /wip-orders channel (for order replies)');
+});
 
-  console.log('Test 1: Placing a new order...');
-  const newOrder = {
-    channel: 'new-orders',
-    headers: {
-      orderCorrelationId: '12345'
-    },
-    payload: {
+wsWipOrders.on('message', (data) => {
+  const message = JSON.parse(data);
+  console.log('\n📨 Received reply on /wip-orders:');
+  console.log(`   Payload:`, JSON.stringify(message, null, 2));
+});
+
+wsCancelledOrders.on('open', () => {
+  console.log('Subscribed to /cancelled-orders channel (for cancellation replies)');
+});
+
+wsCancelledOrders.on('message', (data) => {
+  const message = JSON.parse(data);
+  console.log('\n📨 Received reply on /cancelled-orders:');
+  console.log(`   Payload:`, JSON.stringify(message, null, 2));
+});
+
+// Wait for subscriptions to be established
+setTimeout(() => {
+  testNewOrder();
+}, 500);
+
+// Test 1: Place a new order
+function testNewOrder() {
+  const wsNewOrder = new WebSocket('ws://localhost:8080/new-orders');
+
+  wsNewOrder.on('open', () => {
+    console.log('\nConnected to /new-orders channel');
+    console.log('-----------------------------------\n');
+
+    console.log('Test 1: Placing a new order...');
+    const newOrder = {
       id: 10,
       orderItems: [
         {
@@ -28,82 +54,109 @@ ws.on('open', () => {
           price: 1000
         }
       ]
-    }
-  };
+    };
 
-  ws.send(JSON.stringify(newOrder));
+    wsNewOrder.send(JSON.stringify(newOrder));
+    
+    // After sending, test delivery
+    setTimeout(() => {
+      wsNewOrder.close();
+      testDelivery();
+    }, 2000);
+  });
 
-  setTimeout(() => {
+  wsNewOrder.on('error', (error) => {
+    console.error('WebSocket error:', error);
+  });
+}
+
+// Test 2: Initiate delivery
+function testDelivery() {
+  const wsDelivery = new WebSocket('ws://localhost:8080/out-for-delivery-orders');
+  
+  wsDelivery.on('open', () => {
+    console.log('\nConnected to /out-for-delivery-orders channel');
     console.log('\nTest 2: Initiating delivery for order...');
     const deliveryRequest = {
-      channel: 'out-for-delivery-orders',
-      payload: {
-        orderId: 10,
-        deliveryAddress: '1234 Elm Street, Springfield',
-        deliveryDate: '2025-04-14'
-      }
+      orderId: 10,
+      deliveryAddress: '1234 Elm Street, Springfield',
+      deliveryDate: '2025-04-14'
     };
-    ws.send(JSON.stringify(deliveryRequest));
-  }, 3000);
+    wsDelivery.send(JSON.stringify(deliveryRequest));
+  });
 
-  setTimeout(() => {
+  wsDelivery.on('message', (data) => {
+    const message = JSON.parse(data);
+    console.log('\n📨 Received message from /out-for-delivery-orders:');
+    console.log(`   Payload:`, JSON.stringify(message, null, 2));
+    
+    wsDelivery.close();
+    
+    // Test cancellation flow
+    setTimeout(() => {
+      testCancellation();
+    }, 2000);
+  });
+
+  wsDelivery.on('error', (error) => {
+    console.error('WebSocket error:', error);
+  });
+}
+
+// Test 3 & 4: Place and cancel order
+function testCancellation() {
+  const wsNewOrder2 = new WebSocket('ws://localhost:8080/new-orders');
+  
+  wsNewOrder2.on('open', () => {
+    console.log('\nConnected to /new-orders channel (second order)');
     console.log('\nTest 3: Placing another order to cancel...');
     const orderToCancel = {
-      channel: 'new-orders',
-      headers: {
-        orderCorrelationId: '67890'
-      },
-      payload: {
-        id: 20,
-        orderItems: [
-          {
-            id: 3,
-            name: 'iPad',
-            quantity: 2,
-            price: 800
-          }
-        ]
-      }
+      id: 20,
+      orderItems: [
+        {
+          id: 3,
+          name: 'iPad',
+          quantity: 2,
+          price: 800
+        }
+      ]
     };
-    ws.send(JSON.stringify(orderToCancel));
-  }, 5000);
+    wsNewOrder2.send(JSON.stringify(orderToCancel));
+    
+    wsNewOrder2.close();
+    
+    // Now cancel it
+    setTimeout(() => {
+      const wsCancel = new WebSocket('ws://localhost:8080/to-be-cancelled-orders');
+      
+      wsCancel.on('open', () => {
+        console.log('\nConnected to /to-be-cancelled-orders channel');
+        console.log('\nTest 4: Cancelling order 20...');
+        const cancelRequest = {
+          id: 20
+        };
+        wsCancel.send(JSON.stringify(cancelRequest));
+        
+        setTimeout(() => {
+          wsCancel.close();
+          
+          console.log('\n-----------------------------------');
+          console.log('All tests completed.');
+          
+          wsWipOrders.close();
+          wsCancelledOrders.close();
+          process.exit(0);
+        }, 1000);
+      });
 
-  setTimeout(() => {
-    console.log('\nTest 4: Cancelling order 20...');
-    const cancelRequest = {
-      channel: 'to-be-cancelled-orders',
-      headers: {
-        orderCorrelationId: '67890'
-      },
-      payload: {
-        id: 20
-      }
-    };
-    ws.send(JSON.stringify(cancelRequest));
-  }, 7000);
+      wsCancel.on('error', (error) => {
+        console.error('WebSocket error:', error);
+      });
+    }, 1000);
+  });
 
-  setTimeout(() => {
-    console.log('\n-----------------------------------');
-    console.log('All tests completed. Closing connection...');
-    ws.close();
-  }, 9000);
-});
+  wsNewOrder2.on('error', (error) => {
+    console.error('WebSocket error:', error);
+  });
+}
 
-ws.on('message', (data) => {
-  const message = JSON.parse(data);
-  console.log('\n📨 Received message:');
-  console.log(`   Channel: ${message.channel}`);
-  if (message.headers) {
-    console.log(`   Correlation ID: ${message.headers.orderCorrelationId}`);
-  }
-  console.log(`   Payload:`, JSON.stringify(message.payload, null, 2));
-});
-
-ws.on('close', () => {
-  console.log('\nDisconnected from server');
-  process.exit(0);
-});
-
-ws.on('error', (error) => {
-  console.error('WebSocket error:', error);
-});
