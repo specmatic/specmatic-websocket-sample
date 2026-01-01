@@ -1,0 +1,20 @@
+{
+  "name": "order-websocket-api",
+  "version": "1.0.0",
+  "description": "WebSocket-based Order API following AsyncAPI 3.0.0 specification",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test-client.js"
+  },
+  "keywords": [
+    "websocket",
+    "asyncapi",
+    "orders"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ws": "^8.16.0"
+  }
+}
