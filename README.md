@@ -28,6 +28,12 @@ The system uses channels to organize different message types:
 npm install
 ```
 
+## Run Contract Tests
+
+```bash
+npm run contractTest
+```
+
 ## Usage
 
 ### Start the Server
@@ -47,3 +53,5 @@ npm test
 ```
 
 This will run automated tests demonstrating all API features.
+
+
