@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node test-client.js"
+    "test": "node test-client.js",
+    "contractTest": "node contract-test-runner.js"
   },
   "keywords": [
     "websocket",
