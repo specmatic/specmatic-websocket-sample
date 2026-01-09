@@ -17,6 +17,8 @@ app.put('/orders', (req, res) => {
 
   order.status = status;
   order.timestamp = timestamp || new Date().toISOString();
+  
+  orders.set(id, order);
 
   const message = {
     id: order.id,
@@ -27,7 +29,7 @@ app.put('/orders', (req, res) => {
   broadcastToChannel('/accepted-orders', message);
   console.log(`Order ${id} accepted via HTTP`);
 
-  res.json(message);
+  res.status(200).json(message);
 });
 
 app.get('/orders/:id', (req, res) => {
@@ -47,11 +49,11 @@ app.get('/orders/:id', (req, res) => {
     return res.status(404).json({ error: `Order ${orderId} not found with status ${status}` });
   }
 
-  res.json(order);
+  res.status(200).json(order);
 });
 
 app.use((req, res) => {
-  res.status(404).json({ error: 'Not found' });
+  res.status(400).send(`No matching REST stub or contract found for method ${req.method} and path ${req.path}`);
 });
 
 function start() {
