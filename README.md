@@ -21,6 +21,7 @@ The system uses channels to organize different message types:
 
 - Node.js (v14 or higher)
 - npm
+- Docker
 
 ## Installation
 
