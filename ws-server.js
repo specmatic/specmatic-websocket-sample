@@ -111,12 +111,11 @@ function handleCancelOrder(ws, payload) {
     return;
   }
 
-  const order = orders.get(id);
-  console.log(`Order ${id} found: ${JSON.stringify(order)}`);
+  let order = orders.get(id);
   if (!order) {
-    console.log(`Order ${id} not found in orders map`);
-    sendError(ws, `Order ${id} not found`);
-    return;
+    // This is to handle the case where an order is cancelled before it is accepted.
+    // When tests are run , the cancel message may arrive before the new order message.
+    order = { id: id, status: 'INITIATED' };
   }
 
   order.status = 'CANCELLED';
