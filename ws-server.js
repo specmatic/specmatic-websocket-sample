@@ -115,10 +115,11 @@ function handleCancelOrder(ws, payload) {
   if (!order) {
     // This is to handle the case where an order is cancelled before it is accepted.
     // When tests are run , the cancel message may arrive before the new order message.
-    order = { id: id, status: 'INITIATED' };
+    order = {id: id, status: 'CANCELLED'};
+    orders.set(orderId, order);
+  } else {
+    order.status = 'CANCELLED';
   }
-
-  order.status = 'CANCELLED';
 
   const response = {
     reference: id,
