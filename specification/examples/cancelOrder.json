@@ -1,0 +1,16 @@
+{
+  "name": "CANCEL_ORDER",
+  "receive": {
+    "topic": "to-be-cancelled-orders",
+    "payload": {
+      "id": 10
+    }
+  },
+  "send": {
+    "topic": "cancelled-orders",
+    "payload": {
+      "reference": 10,
+      "status": "CANCELLED"
+    }
+  }
+}

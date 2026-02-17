@@ -1,4 +1,31 @@
-version: 2
-contracts:
-  - provides:
-      - specification/spec.yaml
+version: 3
+systemUnderTest:
+  service:
+    $ref: '#/components/services/orderServiceWS'
+    runOptions:
+      $ref: '#/components/runOptions/orderServiceWSTest'
+    data:
+      examples:
+        - directories:
+            - specification/examples
+components:
+  sources:
+    specmaticOrderContracts:
+      filesystem:
+        directory: .
+  services:
+    orderServiceWS:
+      description: Order Service WebSocket
+      definitions:
+        - definition:
+            source:
+              $ref: "#/components/sources/specmaticOrderContracts"
+            specs:
+              - specification/spec.yaml
+  runOptions:
+    orderServiceWSTest:
+      asyncapi:
+        type: test
+        servers:
+          - host: 'ws://localhost:8080'
+            protocol: ws

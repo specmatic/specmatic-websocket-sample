@@ -7,7 +7,7 @@ execSync(
    -v "${cwd}/specmatic.yaml:/usr/src/app/specmatic.yaml" \
    -v "${cwd}/specification:/usr/src/app/specification" \
    -v "${cwd}/build:/usr/src/app/build" \
-   specmatic/specmatic-async test \
-   --overlay=specification/overlay.yaml`,
+   specmatic/enterprise test \
+   `,
   { stdio: "inherit" }
 );
