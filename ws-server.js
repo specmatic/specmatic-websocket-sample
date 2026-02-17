@@ -112,7 +112,9 @@ function handleCancelOrder(ws, payload) {
   }
 
   const order = orders.get(id);
+  console.log(`Order ${id} found: ${JSON.stringify(order)}`);
   if (!order) {
+    console.log(`Order ${id} not found in orders map`);
     sendError(ws, `Order ${id} not found`);
     return;
   }
