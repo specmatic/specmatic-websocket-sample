@@ -103,6 +103,7 @@ function handleNewOrder(ws, payload) {
 }
 
 function handleCancelOrder(ws, payload) {
+  console.log(`Received cancel order request: ${JSON.stringify(payload)}`);
   const { id } = payload;
 
   if (!id) {
